@@ -1,0 +1,94 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Resources:
+  TestVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+       - Key: Name
+         Value: Test-VPC
+
+  TestInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: Test-IGW
+
+  TestAttachGateway:
+   Type: AWS::EC2::VPCGatewayAttachment
+   Properties:
+    VpcId:
+       Ref: TestVPC
+    InternetGatewayId:
+       Ref: TestInternetGateway
+
+  TestPubSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: TestVPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "ap-south-1a"
+      Tags:
+      - Key: Name
+        Value: Test-Pub-Sub
+
+  TestPvtSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: TestVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: "ap-south-1b"
+      Tags:
+      - Key: Name
+        Value: Test-Pvt-Sub
+
+  TestPubRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: TestVPC
+      Tags:
+      - Key: Name
+        Value: Test-Pub-RT
+
+  TestPvtRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: TestVPC
+      Tags:
+      - Key: Name
+        Value: Test-Pvt-RT  
+
+  TestPubSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: TestPubSubnet
+      RouteTableId:
+        Ref: TestPubRouteTable 
+
+  TestPvtSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: TestPvtSubnet
+      RouteTableId:
+        Ref: TestPvtRouteTable
+
+  TestRoute:
+    Type: AWS::EC2::Route
+    DependsOn: TestAttachGateway
+    Properties:
+       RouteTableId:
+         Ref: TestPubRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: TestInternetGateway
